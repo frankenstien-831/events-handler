@@ -17,9 +17,10 @@ with open('README.md') as readme_file:
 with open('CHANGELOG.md') as history_file:
     history = history_file.read()
 
-# Installed by pip install events-handler-py
+# Installed by pip install ocean-events-handler
 # or pip install -e .
 install_requirements = [
+    'ocean-utils==0.0.1',
 
 ]
 
@@ -37,7 +38,7 @@ test_requirements = [
     'tox',
 ]
 
-# Possibly required by developers of events-handler-py:
+# Possibly required by developers of ocean-events-handler:
 dev_requirements = [
     'bumpversion',
     'pkginfo',
@@ -51,7 +52,7 @@ docs_requirements = [
 ]
 
 packages = []
-for d, _, _ in os.walk('events_handler_py'):
+for d, _, _ in os.walk('ocean_events_handler'):
     if os.path.exists(join(d, '__init__.py')):
         packages.append(d.replace(os.path.sep, '.'))
 
@@ -76,13 +77,13 @@ setup(
     long_description=readme,
     long_description_content_type="text/markdown",
     include_package_data=True,
-    keywords='events-handler-py',
-    name='events-handler-py',
+    keywords='ocean-events-handler',
+    name='ocean-events-handler',
     packages=packages,
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/oceanprotocol/events-handler-py',
-    version='0.0.1',
+    version='0.1.0',
     zip_safe=False,
 )

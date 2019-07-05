@@ -52,7 +52,7 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 lint: ## check style with PyLint
-	pylint --errors-only events_handler_py tests
+	pylint --errors-only ocean_events_handler tests
 
 test: ## run tests quickly with the default Python
 	py.test
@@ -61,7 +61,7 @@ test-all: ## run tests on every Python version with tox
 	tox
 
 coverage: ## check code coverage quickly with the default Python
-	coverage run --source events_handler_py -m pytest
+	coverage run --source ocean_events_handler -m pytest
 	coverage report -m
 	coverage html
 	$(BROWSER) htmlcov/index.html

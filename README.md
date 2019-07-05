@@ -13,12 +13,17 @@ Python 3.6
 
 ## Quick-start
 
-Install Squid:
+Install ocean-utils:
 
 ```
-pip install squid-py
+pip install ocean-utils
 ```
 
+Start the events monitor:
+```
+# TODO:
+```
+ 
 #### Code style
 
 The information about code style in python is documented in this two links [python-developer-guide](https://github.com/oceanprotocol/dev-ocean/blob/master/doc/development/python-developer-guide.md)
