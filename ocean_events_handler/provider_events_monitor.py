@@ -7,14 +7,16 @@ import time
 from datetime import datetime
 from threading import Thread
 
-from ocean_utils..agreements.service_agreement import ServiceAgreement
-from ocean_utils..agreements.service_agreement_template import ServiceAgreementTemplate
-from ocean_utils..agreements.service_types import ServiceTypes
-from ocean_utils..agreements.utils import get_sla_template_path
+from ocean_utils.agreements.service_agreement import ServiceAgreement
+from ocean_utils.agreements.service_agreement_template import ServiceAgreementTemplate
+from ocean_utils.agreements.service_types import ServiceTypes
+from ocean_utils.agreements.utils import get_sla_template_path
+from ocean_utils.did import id_to_did
+from ocean_utils.did_resolver.did_resolver import DIDResolver
+from ocean_utils.keeper.web3_provider import Web3Provider
+
 from ocean_events_handler.agreement_store.agreements import AgreementsStorage
-from ocean_utils..did import id_to_did
-from ocean_utils..did_resolver.did_resolver import DIDResolver
-from ocean_utils..keeper.web3_provider import Web3Provider
+from ocean_events_handler.event_handlers import accessSecretStore, lockRewardCondition
 
 logger = logging.getLogger(__name__)
 
@@ -91,10 +93,10 @@ class ProviderEventsMonitor:
 
     @staticmethod
     def get_instance(keeper, storage_path, account):
-        if not EventsManager._instance or EventsManager._instance.provider_account != account:
-            EventsManager._instance = EventsManager(keeper, storage_path, account)
+        if not ProviderEventsMonitor._instance or ProviderEventsMonitor._instance.provider_account != account:
+            ProviderEventsMonitor._instance = ProviderEventsMonitor(keeper, storage_path, account)
 
-        return EventsManager._instance
+        return ProviderEventsMonitor._instance
 
     @property
     def db(self):
@@ -267,7 +269,7 @@ class ProviderEventsMonitor:
                 self._keeper.lock_reward_condition.subscribe_condition_fulfilled(
                     agreement_id,
                     max(condition_def_dict['lockReward'].timeout, self.EVENT_WAIT_TIMEOUT),
-                    access_secret_store_condition.fulfillAccessSecretStoreCondition,
+                    lockRewardCondition.fulfillAccessSecretStoreCondition,
                     (agreement_id, ddo.did, service_agreement, consumer_address,
                      self._account, condition_ids[0]),
                     from_block=block_number
@@ -276,7 +278,7 @@ class ProviderEventsMonitor:
                 self._keeper.access_secret_store_condition.subscribe_condition_fulfilled(
                     agreement_id,
                     max(condition_def_dict['accessSecretStore'].timeout, self.EVENT_WAIT_TIMEOUT),
-                    escrow_reward_condition.fulfillEscrowRewardCondition,
+                    accessSecretStore.fulfillEscrowRewardCondition,
                     (agreement_id, service_agreement, price, consumer_address, self._account,
                      condition_ids, condition_ids[2]),
                     from_block=block_number

@@ -3,7 +3,7 @@
 import collections
 import logging
 
-from ocean_utils..data_store.storage_base import StorageBase
+from ocean_utils.data_store.storage_base import StorageBase
 
 logger = logging.getLogger(__name__)
 
