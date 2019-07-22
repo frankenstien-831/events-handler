@@ -184,9 +184,6 @@ class ProviderEventsMonitor:
 
             time.sleep(self._monitor_sleep_time)
 
-    def get_last_block_number(self):
-        return self.latest_block - 100
-
     def get_agreement_events(self, from_block, to_block):
         event_filter = self._keeper.escrow_access_secretstore_template.get_event_filter_for_agreement_created(
             self._account.address, from_block, to_block)

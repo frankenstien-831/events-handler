@@ -20,7 +20,8 @@ with open('CHANGELOG.md') as history_file:
 # Installed by pip install ocean-events-handler
 # or pip install -e .
 install_requirements = [
-    'ocean-utils==0.0.1',
+    'ocean-utils==0.1.0',
+    'ocean-keeper==0.1.0'
 
 ]
 

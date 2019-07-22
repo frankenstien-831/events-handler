@@ -52,7 +52,7 @@ class AgreementsStorage(StorageBase):
         :param urls: hex str encrypted urls list
         :param start_time: str timestamp capturing the time this agreement was initiated
         :param block_number: int
-        :param agreement_type:
+        :param agreement_type: str type of agreement such as 'Access`, `Compute`, ...
         :param conditions: list of str represent names of conditions associated with this agreement
         :return:
         """
