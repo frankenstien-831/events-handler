@@ -53,7 +53,7 @@ def fulfill_access_secret_store_condition(event, agreement_id, did, service_agre
         consumer_address,
         publisher_account
     )
-    process_fulfill_condition(args, keeper.access_secret_store_condition, access_condition_id, logger, 10)
+    process_fulfill_condition(args, keeper.access_secret_store_condition, access_condition_id, logger, keeper, 10)
 
 
 fulfillAccessSecretStoreCondition = fulfill_access_secret_store_condition

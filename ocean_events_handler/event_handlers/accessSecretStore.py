@@ -61,7 +61,7 @@ def fulfill_escrow_reward_condition(event, agreement_id, service_agreement, pric
         access_id,
         publisher_account
     )
-    process_fulfill_condition(args, keeper.escrow_reward_condition, escrow_condition_id, logger, 10)
+    process_fulfill_condition(args, keeper.escrow_reward_condition, escrow_condition_id, logger, keeper, 10)
 
 
 fulfillEscrowRewardCondition = fulfill_escrow_reward_condition

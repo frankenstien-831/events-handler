@@ -41,7 +41,7 @@ def fulfill_lock_reward_condition(event, agreement_id, price, consumer_account, 
         price,
         consumer_account
     )
-    process_fulfill_condition(args, keeper.lock_reward_condition, lock_condition_id, logger, 10)
+    process_fulfill_condition(args, keeper.lock_reward_condition, lock_condition_id, logger, keeper, 10)
 
 
 fulfillLockRewardCondition = fulfill_lock_reward_condition
