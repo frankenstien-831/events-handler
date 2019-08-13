@@ -7,16 +7,20 @@ import time
 from datetime import datetime
 from threading import Thread
 
+import sys
+
+from ocean_keeper.contract_handler import ContractHandler
+from ocean_keeper.utils import get_account
 from ocean_utils.agreements.service_agreement import ServiceAgreement
 from ocean_utils.agreements.service_agreement_template import ServiceAgreementTemplate
 from ocean_utils.agreements.service_types import ServiceTypes
-from ocean_utils.agreements.utils import get_sla_template_path
+from ocean_utils.agreements.utils import get_sla_template
 from ocean_utils.did import id_to_did
 from ocean_utils.did_resolver.did_resolver import DIDResolver
-from ocean_utils.keeper.web3_provider import Web3Provider
-
+from ocean_keeper.web3_provider import Web3Provider
 from ocean_events_handler.agreement_store.agreements import AgreementsStorage
 from ocean_events_handler.event_handlers import accessSecretStore, lockRewardCondition
+from ocean_events_handler.keeper import Keeper
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +58,7 @@ class ProviderEventsMonitor:
     _instance = None
 
     EVENT_WAIT_TIMEOUT = 3600
-    LAST_N_BLOCKS = 200
+    LAST_N_BLOCKS = 400
 
     def __init__(self, keeper, storage_path, account):
         self._keeper = keeper
@@ -68,8 +72,7 @@ class ProviderEventsMonitor:
         self.other_agreement_ids = set()
 
         # prepare condition names and events arguments dict
-        sla_template_path = get_sla_template_path()
-        sla_template = ServiceAgreementTemplate.from_json_file(sla_template_path)
+        sla_template = ServiceAgreementTemplate(template_json=get_sla_template())
         self.condition_names = [cond.name for cond in sla_template.conditions]
         self.event_to_arg_names = sla_template.get_event_to_args_map(self._keeper.contract_name_to_instance)
 
@@ -288,3 +291,27 @@ class ProviderEventsMonitor:
                     (agreement_id, cond_to_id),
                     from_block=block_number
                 )
+
+
+if __name__ == '__main__':
+    if len(sys.argv) < 4:
+        print(f'provider-events-monitor requires 3 arguments, found {len(sys.argv)-1} arguments.\n'
+              f'The required arguments are: \n'
+              f'  keeper_url [http url pointing to the keeper node]'
+              f'  artifacts_path [local folder that has the keeper contracts artifacts (abi files)]'
+              f'  storage_path [path to save agreements data locally in a database file.]')
+
+        sys.exit(-1)
+
+    keeper_url = sys.argv[1]
+    artifacts_path = os.path.expanduser(os.path.expandvars(sys.argv[2]))
+    storage_path = os.path.expanduser(os.path.expandvars(sys.argv[3]))
+
+    ContractHandler.artifacts_path = artifacts_path
+    Web3Provider.get_web3(keeper_url)
+    keeper = Keeper.get_instance(artifacts_path)
+    account = get_account(0)
+    monitor = ProviderEventsMonitor(keeper, storage_path, account)
+    monitor.start_agreement_events_monitor()
+    while True:
+        time.sleep(5)

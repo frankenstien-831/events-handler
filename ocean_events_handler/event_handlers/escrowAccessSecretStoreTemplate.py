@@ -4,8 +4,8 @@
 
 import logging
 
-from ocean_utils.agreements.utils import process_fulfill_condition
-from ocean_utils.keeper import Keeper
+from ocean_keeper.utils import process_fulfill_condition
+from ocean_events_handler.keeper import Keeper
 
 logger = logging.getLogger(__name__)
 
