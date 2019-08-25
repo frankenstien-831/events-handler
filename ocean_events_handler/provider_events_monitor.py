@@ -7,21 +7,16 @@ import time
 from datetime import datetime
 from threading import Thread
 
-import sys
 
-from ocean_keeper.contract_handler import ContractHandler
-from ocean_keeper.utils import get_account
 from ocean_utils.agreements.service_agreement import ServiceAgreement
 from ocean_utils.agreements.service_agreement_template import ServiceAgreementTemplate
 from ocean_utils.agreements.service_types import ServiceTypes
 from ocean_utils.agreements.utils import get_sla_template
 from ocean_utils.did import id_to_did
 from ocean_utils.did_resolver.did_resolver import DIDResolver
-from ocean_keeper.web3_provider import Web3Provider
 
 from ocean_events_handler.agreement_store.agreements import AgreementsStorage
 from ocean_events_handler.event_handlers import accessSecretStore, lockRewardCondition
-from ocean_events_handler.keeper import Keeper
 
 logger = logging.getLogger(__name__)
 
@@ -61,11 +56,11 @@ class ProviderEventsMonitor:
     EVENT_WAIT_TIMEOUT = 3600
     LAST_N_BLOCKS = 400
 
-    def __init__(self, keeper, storage_path, account):
+    def __init__(self, keeper, web3, storage_path, account):
         self._keeper = keeper
         self._storage_path = storage_path
         self._account = account
-        self._web3 = Web3Provider.get_web3()
+        self._web3 = web3
         self._db = AgreementsStorage(self._storage_path)
 
         self.known_agreement_ids = set()

@@ -8,7 +8,7 @@ from eth_utils import add_0x_prefix
 from ocean_keeper.utils import process_fulfill_condition
 from ocean_utils.did import did_to_id
 
-from ocean_events_handler.keeper import Keeper
+from ocean_keeper.keeper import Keeper
 
 logger = logging.getLogger(__name__)
 

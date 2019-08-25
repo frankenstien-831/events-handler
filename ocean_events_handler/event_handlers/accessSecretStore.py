@@ -5,8 +5,8 @@
 import logging
 import time
 
+from ocean_keeper.keeper import Keeper
 from ocean_keeper.utils import process_fulfill_condition
-from ocean_events_handler.keeper import Keeper
 from ocean_keeper.web3_provider import Web3Provider
 
 logger = logging.getLogger(__name__)
