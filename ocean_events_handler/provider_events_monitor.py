@@ -80,7 +80,9 @@ class ProviderEventsMonitor:
         db_latest = db.get_latest_block_number() or self.latest_block
         self.latest_block = min(db_latest, self.latest_block)
         self.last_processed_block = 0
-        logger.debug(f'starting events monitor: latest block number {self.latest_block}')
+        logger.info(f'initialized events monitor: '
+                    f'latest block number {self.latest_block}'
+                    f'provider address {self.provider_account.address}')
 
         self._monitor_is_on = False
         try:
@@ -113,26 +115,28 @@ class ProviderEventsMonitor:
         if self._monitor_is_on:
             return
 
-        logger.debug(f'Starting the agreement events monitor.')
+        logger.info(f'Starting the agreement events monitor.')
         t = Thread(
             target=self.run_monitor,
             daemon=True,
         )
         self._monitor_is_on = True
         t.start()
-        logger.debug('started the agreement events monitor')
+        logger.info('started the agreement events monitor')
 
     def stop_monitor(self):
         self._monitor_is_on = False
 
     def process_pending_agreements(self, pending_agreements, conditions):
-        logger.debug(f'processing pending agreements, there is {len(pending_agreements)} agreements to process.')
+        logger.info(f'processing pending agreements, there is {len(pending_agreements)} agreements to process.')
         for agreement_id in pending_agreements.keys():
             data = pending_agreements[agreement_id]
             did = data[0]
             consumer_address = data[5]
             block_number = data[6]
             unfulfilled_conditions = conditions[agreement_id].keys()
+            logger.info(f'process pending agreement conditions: agreementId={agreement_id}, '
+                        f'unfulfilled conditions={unfulfilled_conditions}')
             self.process_condition_events(
                 agreement_id,
                 unfulfilled_conditions,
@@ -159,6 +163,7 @@ class ProviderEventsMonitor:
     def do_first_check(self):
         db = self.db
         if not db.get_agreement_count():
+            logger.info('No pending agreements found in the local database.')
             return
 
         block_num = db.get_latest_block_number()
@@ -196,7 +201,9 @@ class ProviderEventsMonitor:
             return
 
         if self._account.address != event.args["_accessProvider"]:
-            logger.debug(f'agreement event not for my address {self._account.address}, event provider address {event.args["_accessProvider"]}')
+            logger.debug(f'skip agreement event because it does not match my provider '
+                         f'address {self._account.address}, event provider '
+                         f'address is {event.args["_accessProvider"]}')
             return
         agreement_id = None
         try:

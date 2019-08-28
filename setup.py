@@ -22,7 +22,8 @@ with open('CHANGELOG.md') as history_file:
 install_requirements = [
     'ocean-utils==0.1.0',
     'ocean-keeper==0.1.0',
-    'ocean-secret-store-client==0.0.1'
+    'ocean-secret-store-client==0.0.1',
+    'PyYAML==4.2b4',
 ]
 
 # Required to run setup.py:

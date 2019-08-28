@@ -5,11 +5,13 @@ from ocean_keeper.utils import get_account
 from ocean_keeper.web3_provider import Web3Provider
 from ocean_keeper.keeper import Keeper
 
+from ocean_events_handler.log import setup_logging
 from ocean_events_handler.provider_events_monitor import ProviderEventsMonitor
 from ocean_events_handler.util import get_config, get_keeper_path
 
 
 def run_events_monitor():
+    setup_logging()
     config = get_config()
     keeper_url = config.keeper_url
     artifacts_path = get_keeper_path(config)

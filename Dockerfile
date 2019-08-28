@@ -29,5 +29,6 @@ ENV SECRET_STORE_URL='http://127.0.0.1:12001'
 ENV PARITY_ADDRESS=''
 ENV PARITY_PASSWORD=''
 ENV PARITY_KEYFILE=''
+ENV LOG_LEVEL=''
 
 ENTRYPOINT ["/ocean_events_handler/docker-entrypoint.sh"]
