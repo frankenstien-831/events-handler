@@ -1,4 +1,5 @@
 import os
+import site
 
 from ocean_keeper import Keeper
 from ocean_keeper.web3_provider import Web3Provider
@@ -16,8 +17,11 @@ def get_storage_path(config):
 
 def get_keeper_path(config):
     path = config.keeper_path
-    if not path or not os.path.exists(path) and os.getenv('VIRTUAL_ENV'):
-        path = os.path.join(os.getenv('VIRTUAL_ENV'), 'artifacts')
+    if not os.path.exists(path):
+        if os.getenv('VIRTUAL_ENV'):
+            path = os.path.join(os.getenv('VIRTUAL_ENV'), 'artifacts')
+        else:
+            path = os.path.join(site.PREFIXES[0], 'artifacts')
 
     return path
 

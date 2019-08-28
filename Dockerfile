@@ -4,6 +4,7 @@ LABEL maintainer="Ocean Protocol <devops@oceanprotocol.com>"
 ARG VERSION
 
 RUN apk add --no-cache --update\
+    bash \
     build-base \
     gcc \
     gettext\
