@@ -7,13 +7,13 @@ import time
 from datetime import datetime
 from threading import Thread
 
+
 from ocean_utils.agreements.service_agreement import ServiceAgreement
 from ocean_utils.agreements.service_agreement_template import ServiceAgreementTemplate
 from ocean_utils.agreements.service_types import ServiceTypes
-from ocean_utils.agreements.utils import get_sla_template_path
+from ocean_utils.agreements.utils import get_sla_template
 from ocean_utils.did import id_to_did
 from ocean_utils.did_resolver.did_resolver import DIDResolver
-from ocean_utils.keeper.web3_provider import Web3Provider
 
 from ocean_events_handler.agreement_store.agreements import AgreementsStorage
 from ocean_events_handler.event_handlers import accessSecretStore, lockRewardCondition
@@ -54,13 +54,13 @@ class ProviderEventsMonitor:
     _instance = None
 
     EVENT_WAIT_TIMEOUT = 3600
-    LAST_N_BLOCKS = 200
+    LAST_N_BLOCKS = 400
 
-    def __init__(self, keeper, storage_path, account):
+    def __init__(self, keeper, web3, storage_path, account):
         self._keeper = keeper
         self._storage_path = storage_path
         self._account = account
-        self._web3 = Web3Provider.get_web3()
+        self._web3 = web3
         self._db = AgreementsStorage(self._storage_path)
 
         self.known_agreement_ids = set()
@@ -68,8 +68,7 @@ class ProviderEventsMonitor:
         self.other_agreement_ids = set()
 
         # prepare condition names and events arguments dict
-        sla_template_path = get_sla_template_path()
-        sla_template = ServiceAgreementTemplate.from_json_file(sla_template_path)
+        sla_template = ServiceAgreementTemplate(template_json=get_sla_template())
         self.condition_names = [cond.name for cond in sla_template.conditions]
         self.event_to_arg_names = sla_template.get_event_to_args_map(self._keeper.contract_name_to_instance)
 
@@ -81,7 +80,9 @@ class ProviderEventsMonitor:
         db_latest = db.get_latest_block_number() or self.latest_block
         self.latest_block = min(db_latest, self.latest_block)
         self.last_processed_block = 0
-        logger.debug(f'starting events monitor: latest block number {self.latest_block}')
+        logger.info(f'initialized events monitor: '
+                    f'latest block number {self.latest_block}'
+                    f'provider address {self.provider_account.address}')
 
         self._monitor_is_on = False
         try:
@@ -114,26 +115,28 @@ class ProviderEventsMonitor:
         if self._monitor_is_on:
             return
 
-        logger.debug(f'Starting the agreement events monitor.')
+        logger.info(f'Starting the agreement events monitor.')
         t = Thread(
             target=self.run_monitor,
             daemon=True,
         )
         self._monitor_is_on = True
         t.start()
-        logger.debug('started the agreement events monitor')
+        logger.info('started the agreement events monitor')
 
     def stop_monitor(self):
         self._monitor_is_on = False
 
     def process_pending_agreements(self, pending_agreements, conditions):
-        logger.debug(f'processing pending agreements, there is {len(pending_agreements)} agreements to process.')
+        logger.info(f'processing pending agreements, there is {len(pending_agreements)} agreements to process.')
         for agreement_id in pending_agreements.keys():
             data = pending_agreements[agreement_id]
             did = data[0]
             consumer_address = data[5]
             block_number = data[6]
             unfulfilled_conditions = conditions[agreement_id].keys()
+            logger.info(f'process pending agreement conditions: agreementId={agreement_id}, '
+                        f'unfulfilled conditions={unfulfilled_conditions}')
             self.process_condition_events(
                 agreement_id,
                 unfulfilled_conditions,
@@ -160,6 +163,7 @@ class ProviderEventsMonitor:
     def do_first_check(self):
         db = self.db
         if not db.get_agreement_count():
+            logger.info('No pending agreements found in the local database.')
             return
 
         block_num = db.get_latest_block_number()
@@ -197,7 +201,9 @@ class ProviderEventsMonitor:
             return
 
         if self._account.address != event.args["_accessProvider"]:
-            logger.debug(f'agreement event not for my address {self._account.address}, event provider address {event.args["_accessProvider"]}')
+            logger.debug(f'skip agreement event because it does not match my provider '
+                         f'address {self._account.address}, event provider '
+                         f'address is {event.args["_accessProvider"]}')
             return
         agreement_id = None
         try:

@@ -5,9 +5,9 @@
 import logging
 import time
 
-from ocean_utils.agreements.utils import process_fulfill_condition
-from ocean_utils.keeper import Keeper
-from ocean_utils.keeper.web3_provider import Web3Provider
+from ocean_keeper.keeper import Keeper
+from ocean_keeper.utils import process_fulfill_condition
+from ocean_keeper.web3_provider import Web3Provider
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ def fulfill_escrow_reward_condition(event, agreement_id, service_agreement, pric
         access_id,
         publisher_account
     )
-    process_fulfill_condition(args, keeper.escrow_reward_condition, escrow_condition_id, logger, 10)
+    process_fulfill_condition(args, keeper.escrow_reward_condition, escrow_condition_id, logger, keeper, 10)
 
 
 fulfillEscrowRewardCondition = fulfill_escrow_reward_condition

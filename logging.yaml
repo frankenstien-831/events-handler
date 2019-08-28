@@ -38,10 +38,6 @@ loggers:
     level: INFO
     handlers: [console]
     propagate: no
-  ocean:
-    level: INFO
-    handlers: [console]
-    propagate: no
   keeper:
     level: INFO
     handlers: [console]

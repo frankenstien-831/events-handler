@@ -5,10 +5,10 @@
 import logging
 
 from eth_utils import add_0x_prefix
-
-from ocean_utils.agreements.utils import process_fulfill_condition
+from ocean_keeper.utils import process_fulfill_condition
 from ocean_utils.did import did_to_id
-from ocean_utils.keeper import Keeper
+
+from ocean_keeper.keeper import Keeper
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ def fulfill_access_secret_store_condition(event, agreement_id, did, service_agre
         consumer_address,
         publisher_account
     )
-    process_fulfill_condition(args, keeper.access_secret_store_condition, access_condition_id, logger, 10)
+    process_fulfill_condition(args, keeper.access_secret_store_condition, access_condition_id, logger, keeper, 10)
 
 
 fulfillAccessSecretStoreCondition = fulfill_access_secret_store_condition

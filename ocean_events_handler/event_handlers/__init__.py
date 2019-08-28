@@ -3,14 +3,12 @@
 
 from ocean_events_handler.event_handlers import (
     accessSecretStore,
-    escrowAccessSecretStoreTemplate,
     escrowRewardCondition,
     lockRewardCondition
 )
 
 event_handlers_map = {
     'accessSecretStore': accessSecretStore,
-    'escrowAccessSecretStoreTemplate': escrowAccessSecretStoreTemplate,
     'escrowRewardCondition': escrowRewardCondition,
     'lockRewardCondition': lockRewardCondition
 }
