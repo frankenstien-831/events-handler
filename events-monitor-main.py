@@ -19,6 +19,17 @@ def run_events_monitor():
     web3 = Web3Provider.get_web3(keeper_url)
     keeper = Keeper.get_instance(artifacts_path)
     account = get_account(0)
+    if account is None:
+        raise AssertionError(f'Provider events monitor cannot run without a valid '
+                             f'ethereum account. Account address was not found in the environment'
+                             f'variable `PARITY_ADDRESS`. Please set the following evnironment '
+                             f'variables and try again: `PARITY_ADDRESS`, `PARITY_PASSWORD`, '
+                             f'and `PARITY_KEYFILE`.')
+    if not account.password or not account.key_file:
+        raise AssertionError(f'Provider events monitor cannot run without a valid '
+                             f'ethereum account with a password and keyfile. Current account '
+                             f'has password {account.password} and keyfile {account.key_file}.')
+
     monitor = ProviderEventsMonitor(keeper, web3, storage_path, account)
     monitor.start_agreement_events_monitor()
     while True:
