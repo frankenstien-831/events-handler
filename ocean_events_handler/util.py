@@ -38,5 +38,3 @@ def keeper_instance():
 
 def web3():
     return Web3Provider.get_web3(get_config().keeper_url)
-
-
