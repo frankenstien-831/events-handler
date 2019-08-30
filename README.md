@@ -11,17 +11,43 @@ Publisher events handler agent dealing with Keeper Contract events
 
 Python 3.6
 
-## Quick-start
+## Running Locally, for Dev and Test
 
-Install ocean-utils:
+First, clone this repository:
 
-```
-pip install ocean-utils
+```bash
+git clone git@github.com:oceanprotocol/events-handler-py.git
+cd events-handler-py/
 ```
 
-Start the events monitor:
+Start a keeper node and other services of the ocean network:
+
+```bash
+git clone git@github.com:oceanprotocol/barge.git
+cd barge
+bash start_ocean.sh --no-events-handler --no-pleuston --local-spree-node
 ```
-# TODO:
+
+Barge is the repository where all the Ocean Docker Compose files are located. 
+We are running the script `start_ocean.sh`: the easy way to have Ocean projects 
+up and running. We run without an events-handler instance because we will run it directly.
+
+To learn more about Barge, visit [the Barge repository](https://github.com/oceanprotocol/barge).
+
+Note that it runs an Aquarius instance and an Elasticsearch instance but Aquarius can 
+also work with BigchainDB or MongoDB.
+
+Export environment variables `PROVIDER_ADDRESS`, `PROVIDER_PASSWORD`
+and `PROVIDER_KEYFILE`. Use the values from the `tox.ini` file, or use 
+your own.
+
+The most simple way to start is:
+
+```bash
+pip install -r requirements_dev.txt
+export CONFIG_FILE=config.ini
+./scripts/wait_for_migration_and_extract_keeper_artifacts.sh
+./start_events_monitor.sh
 ```
  
 #### Code style
