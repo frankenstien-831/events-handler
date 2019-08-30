@@ -7,7 +7,7 @@ from ocean_keeper.keeper import Keeper
 
 from ocean_events_handler.log import setup_logging
 from ocean_events_handler.provider_events_monitor import ProviderEventsMonitor
-from ocean_events_handler.util import get_config, get_keeper_path
+from ocean_events_handler.util import get_config, get_keeper_path, init_account_envvars
 
 
 def run_events_monitor():
@@ -20,6 +20,8 @@ def run_events_monitor():
     ContractHandler.artifacts_path = artifacts_path
     web3 = Web3Provider.get_web3(keeper_url)
     keeper = Keeper.get_instance(artifacts_path)
+    init_account_envvars()
+
     account = get_account(0)
     if account is None:
         raise AssertionError(f'Provider events monitor cannot run without a valid '
