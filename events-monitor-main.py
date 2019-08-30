@@ -1,3 +1,4 @@
+import os
 import time
 
 from ocean_keeper.contract_handler import ContractHandler
@@ -26,7 +27,7 @@ def run_events_monitor():
     if account is None:
         raise AssertionError(f'Provider events monitor cannot run without a valid '
                              f'ethereum account. Account address was not found in the environment'
-                             f'variable `PROVIDER_ADDRESS`. Please set the following evnironment '
+                             f'variable `PROVIDER_ADDRESS`. Please set the following environment '
                              f'variables and try again: `PROVIDER_ADDRESS`, `PROVIDER_PASSWORD`, '
                              f'and `PROVIDER_KEYFILE`.')
     if not account.password or not account.key_file:
