@@ -26,11 +26,15 @@ def get_keeper_path(config):
     return path
 
 
+def init_account_envvars():
+    os.environ['PARITY_ADDRESS'] = os.getenv('PROVIDER_ADDRESS', '')
+    os.environ['PARITY_PASSWORD'] = os.getenv('PROVIDER_PASSWORD', '')
+    os.environ['PARITY_KEYFILE'] = os.getenv('PROVIDER_KEYFILE', '')
+
+
 def keeper_instance():
     return Keeper.get_instance(get_keeper_path(get_config()))
 
 
 def web3():
     return Web3Provider.get_web3(get_config().keeper_url)
-
-

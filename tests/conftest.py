@@ -7,7 +7,7 @@ from ocean_keeper.contract_handler import ContractHandler
 from ocean_keeper.utils import get_account
 from ocean_keeper.web3_provider import Web3Provider
 
-from ocean_events_handler.util import get_config, get_keeper_path, get_storage_path
+from ocean_events_handler.util import get_config, get_keeper_path, get_storage_path, init_account_envvars
 
 
 @pytest.fixture(autouse=True)
@@ -16,6 +16,7 @@ def setup_all():
     keeper_url = config.keeper_url
     Web3Provider.get_web3(keeper_url)
     ContractHandler.artifacts_path = get_keeper_path(config)
+    init_account_envvars()
 
 
 @pytest.fixture

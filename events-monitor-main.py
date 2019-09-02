@@ -1,3 +1,4 @@
+import os
 import time
 
 from ocean_keeper.contract_handler import ContractHandler
@@ -7,7 +8,7 @@ from ocean_keeper.keeper import Keeper
 
 from ocean_events_handler.log import setup_logging
 from ocean_events_handler.provider_events_monitor import ProviderEventsMonitor
-from ocean_events_handler.util import get_config, get_keeper_path
+from ocean_events_handler.util import get_config, get_keeper_path, init_account_envvars
 
 
 def run_events_monitor():
@@ -20,13 +21,15 @@ def run_events_monitor():
     ContractHandler.artifacts_path = artifacts_path
     web3 = Web3Provider.get_web3(keeper_url)
     keeper = Keeper.get_instance(artifacts_path)
+    init_account_envvars()
+
     account = get_account(0)
     if account is None:
         raise AssertionError(f'Provider events monitor cannot run without a valid '
                              f'ethereum account. Account address was not found in the environment'
-                             f'variable `PARITY_ADDRESS`. Please set the following evnironment '
-                             f'variables and try again: `PARITY_ADDRESS`, `PARITY_PASSWORD`, '
-                             f'and `PARITY_KEYFILE`.')
+                             f'variable `PROVIDER_ADDRESS`. Please set the following environment '
+                             f'variables and try again: `PROVIDER_ADDRESS`, `PROVIDER_PASSWORD`, '
+                             f'and `PROVIDER_KEYFILE`.')
     if not account.password or not account.key_file:
         raise AssertionError(f'Provider events monitor cannot run without a valid '
                              f'ethereum account with a password and keyfile. Current account '
