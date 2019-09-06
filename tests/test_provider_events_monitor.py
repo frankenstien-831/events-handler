@@ -2,8 +2,6 @@ import time
 
 from ocean_keeper.web3_provider import Web3Provider
 from ocean_utils.agreements.service_agreement import ServiceAgreement
-from ocean_utils.aquarius import AquariusProvider
-from ocean_utils.aquarius.aquarius import Aquarius
 
 from ocean_events_handler.provider_events_monitor import ProviderEventsMonitor
 from tests.conftest import get_consumer_account
@@ -28,7 +26,6 @@ def test_process_pending_agreements(keeper, web3, storage_path, provider_account
     metadata = ddo.metadata
     encrypted_files = metadata['encryptedFiles']
     sa = ServiceAgreement.from_ddo('access', ddo)
-    index = sa.index
     agr_1 = place_order(provider_account, ddo, consumer)
     agr_2 = place_order(provider_account, ddo, consumer)
     agr_3 = place_order(provider_account, ddo, consumer)
