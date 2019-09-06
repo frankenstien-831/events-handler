@@ -251,8 +251,8 @@ class ProviderEventsMonitor:
         if new_agreement:
             start_time = int(datetime.now().timestamp())
             self.db.record_service_agreement(
-                agreement_id, ddo.did, service_agreement.service_definition_id, price,
-                ddo.metadata['base'].get('encryptedFiles'), consumer_address, start_time,
+                agreement_id, ddo.did, service_agreement.index, price,
+                ddo.metadata.get('encryptedFiles'), consumer_address, start_time,
                 block_number, ServiceTypes.ASSET_ACCESS,
                 service_agreement.condition_by_name.keys()
             )
