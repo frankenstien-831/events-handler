@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class DatabaseSchema:
     agreement_table = f'''
         CREATE TABLE IF NOT EXISTS agreement
-            (agreement_id VARCHAR(70) PRIMARY KEY, did VARCHAR, service_definition_id INTEGER, 
+            (agreement_id VARCHAR(70) PRIMARY KEY, did VARCHAR, service_index INTEGER, 
              price VARCHAR, urls VARCHAR, consumer VARCHAR(70), start_time INTEGER, 
              block_number INTEGER, type VARCHAR(100));
     '''
@@ -39,7 +39,7 @@ class AgreementsStorage(StorageBase):
         for create_table_query in DatabaseSchema.SCHEMA.values():
             self._run_query(create_table_query)
 
-    def record_service_agreement(self, agreement_id, did, service_definition_id, price,
+    def record_service_agreement(self, agreement_id, did, service_index, price,
                                  urls, consumer, start_time, block_number,
                                  agreement_type, conditions):
         """
@@ -47,7 +47,7 @@ class AgreementsStorage(StorageBase):
 
         :param agreement_id: hex str the id of the service agreement used as primary key
         :param did: DID, str in the format `did:op:0xXXX`
-        :param service_definition_id: identifier of the service inside the asset DDO, str
+        :param service_index: identifier of the service inside the asset DDO, str
         :param price: Asset price, int
         :param urls: hex str encrypted urls list
         :param start_time: str timestamp capturing the time this agreement was initiated
@@ -58,13 +58,13 @@ class AgreementsStorage(StorageBase):
         """
         logger.debug(f'Recording agreement info to `service_agreements` storage: '
                      f'agreementId={agreement_id}, did={did},'
-                     f'service_definition_id={service_definition_id}, price={price}')
+                     f'service_index={service_index}, price={price}')
         self._run_query(
             'INSERT OR REPLACE INTO '
-            'agreement(agreement_id, did, service_definition_id, price, urls, consumer, '
+            'agreement(agreement_id, did, service_index, price, urls, consumer, '
             '          start_time, block_number, type) '
             'VALUES (?,?,?,?,?,?,?,?,?) ',
-            (agreement_id, did, service_definition_id,
+            (agreement_id, did, service_index,
              str(price), urls, consumer, start_time, block_number, agreement_type),
         )
         for cond in conditions:
@@ -104,7 +104,7 @@ class AgreementsStorage(StorageBase):
         agreements = collections.defaultdict(list)
         conditions = collections.defaultdict(dict)
         query = f'''
-            SELECT a.agreement_id, did, service_definition_id, price, urls, consumer, start_time, 
+            SELECT a.agreement_id, did, service_index, price, urls, consumer, start_time, 
                 block_number, type, ac.condition_name, ac.status 
 
             FROM agreement AS a, agreement_condition AS ac
@@ -139,7 +139,7 @@ class AgreementsStorage(StorageBase):
         conditions = collections.defaultdict(dict)
         try:
             query = f'''
-                SELECT a.agreement_id, did, service_definition_id, price, urls, start_time, 
+                SELECT a.agreement_id, did, service_index, price, urls, start_time, 
                     consumer, block_number, type, ac.condition_name, ac.status 
 
                 FROM agreement AS a, agreement_condition AS ac
