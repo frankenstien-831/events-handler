@@ -1,6 +1,9 @@
 History
 =======
 
+0.2.0 (September 6th, 2019)
+---------------------------
+* Update to work with the new ddos.
  
 0.1.1 (Aug, 2019)
 -----------------------
