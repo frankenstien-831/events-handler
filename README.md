@@ -9,16 +9,17 @@ Monitors ServiceExecutionAgreement events and act as a provider agent to
 grant access and release reward for the publisher/provider. This is a critical 
 part in the process of consuming data sets in the Ocean Protocol network. 
 Every provider in the network must run some sort of an events-handler to 
-be able to fulfill the access condition of an `Access` service in an `SEA`.
+be able to fulfill the access condition of an `Access` service in an `SEA` .
 
 This release only supports the `Access` service type that is defined in an 
-Ocean `DDO`. 
+Ocean `DDO`. More service types will be supported in the events-handler when 
+they're added to the Ocean services.
 
 ## Prerequisites
 
 Python 3.6
 
-## Running Locally, for Dev and Test
+## Running Locally
 
 First, clone this repository:
 
@@ -60,7 +61,11 @@ export CONFIG_FILE=config.ini
 Once the events-handler is running, you can use the Ocean API (Squid library available in python, node, 
 and java implementation) to publish an asset and start a consume request. For more details on using the  
 Ocean ecosystem please refer to [Ocean API](https://github.com/oceanprotocol/squid-py/#usage) 
- 
+
+To run the events-handler as a provider, you can either run it from source as described above or 
+use a docker image `docker pull oceanprotocol/events-handler-py:latest`. To run the docker image 
+please refer to the docker-compose file in barge [events_handler.yml](https://github.com/oceanprotocol/barge/tree/master/compose-files/events_handler.yml)
+
 #### Code style
 
 The information about code style in python is documented in this two links [python-developer-guide](https://github.com/oceanprotocol/dev-ocean/blob/master/doc/development/python-developer-guide.md)
