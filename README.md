@@ -5,7 +5,14 @@ Publisher events handler agent dealing with Keeper Contract events
 
 
 ## Features
+Monitors ServiceExecutionAgreement events and act as a provider agent to 
+grant access and release reward for the publisher/provider. This is a critical 
+part in the process of consuming data sets in the Ocean Protocol network. 
+Every provider in the network must run some sort of an events-handler to 
+be able to fulfill the access condition of an `Access` service in an `SEA`.
 
+This release only supports the `Access` service type that is defined in an 
+Ocean `DDO`. 
 
 ## Prerequisites
 
@@ -49,6 +56,10 @@ export CONFIG_FILE=config.ini
 ./scripts/wait_for_migration_and_extract_keeper_artifacts.sh
 ./start_events_monitor.sh
 ```
+
+Once the events-handler is running, you can use the Ocean API (Squid library available in python, node, 
+and java implementation) to publish an asset and start a consume request. For more details on using the  
+Ocean ecosystem please refer to [Ocean API](https://github.com/oceanprotocol/squid-py/#usage) 
  
 #### Code style
 
