@@ -28,7 +28,7 @@ deploy:
   password: ${PYPI_PASSWORD}
   on:
     tags: true
-    repo: oceanprotocol/events-handler-py
+    repo: oceanprotocol/events-handler
     python: 3.6
 
 notifications:
