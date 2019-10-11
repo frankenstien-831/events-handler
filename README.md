@@ -33,7 +33,7 @@ Start a keeper node and other services of the ocean network:
 ```bash
 git clone git@github.com:oceanprotocol/barge.git
 cd barge
-bash start_ocean.sh --no-events-handler --no-pleuston --local-spree-node
+bash start_ocean.sh --no-events-handler --no-commons --local-spree-node
 ```
 
 Barge is the repository where all the Ocean Docker Compose files are located. 
