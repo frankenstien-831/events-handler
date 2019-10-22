@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 from threading import Thread
 
-from ocean_utils.agreements.service_agreement import ServiceAgreement
+from ocean_utils.agreements.service_agreement import ServiceTypesIndices
 from ocean_utils.agreements.service_agreement_template import ServiceAgreementTemplate
 from ocean_utils.agreements.service_types import ServiceTypes
 from ocean_utils.agreements.utils import get_sla_template
@@ -15,7 +15,8 @@ from ocean_utils.did import id_to_did
 from ocean_utils.did_resolver.did_resolver import DIDResolver
 
 from ocean_events_handler.agreement_store.agreements import AgreementsStorage
-from ocean_events_handler.event_handlers import accessSecretStore, lockRewardCondition, lockRewardExecutionCondition
+from ocean_events_handler.event_handlers import (accessSecretStore, lockRewardCondition,
+                                                 lockRewardExecutionCondition)
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +71,8 @@ class ProviderEventsMonitor:
         # prepare condition names and events arguments dict
         sla_template = ServiceAgreementTemplate(template_json=get_sla_template())
         self.condition_names = [cond.name for cond in sla_template.conditions]
-        self.event_to_arg_names = sla_template.get_event_to_args_map(self._keeper.contract_name_to_instance)
+        self.event_to_arg_names = sla_template.get_event_to_args_map(
+            self._keeper.contract_name_to_instance)
 
         db = self.db
         db.create_tables()
@@ -140,13 +142,18 @@ class ProviderEventsMonitor:
             unfulfilled_conditions = conditions[agreement_id].keys()
             logger.info(f'process pending agreement conditions: agreementId={agreement_id}, '
                         f'unfulfilled conditions={unfulfilled_conditions}')
+            if data[1] == ServiceTypesIndices.DEFAULT_ACCESS_INDEX:
+                template_id = self._keeper.escrow_access_secretstore_template.address
+            else:
+                template_id = self._keeper.escrow_compute_execution_template.address
             self.process_condition_events(
                 agreement_id,
                 unfulfilled_conditions,
                 did,
                 consumer_address,
                 block_number,
-                new_agreement=False
+                new_agreement=False,
+                template_id=template_id
             )
 
     def get_next_block_range(self):
@@ -192,10 +199,10 @@ class ProviderEventsMonitor:
             time.sleep(self._monitor_sleep_time)
 
     def get_agreement_events(self, from_block, to_block):
-        event_filter = self._keeper.escrow_access_secretstore_template\
+        event_filter = self._keeper.escrow_access_secretstore_template \
             .get_event_filter_for_agreement_created(
             self._account.address, from_block, to_block)
-        event_filter2 = self._keeper.escrow_compute_execution_template\
+        event_filter2 = self._keeper.escrow_compute_execution_template \
             .get_event_filter_for_agreement_created(
             self._account.address, from_block, to_block)
         logger.debug(
@@ -204,7 +211,6 @@ class ProviderEventsMonitor:
         logs = event_filter.get_all_entries(max_tries=5)
         logs2 = event_filter2.get_all_entries(max_tries=5)
         logs3 = logs + logs2
-        # event_filter.uninstall()
         return logs3
 
     def _handle_agreement_created_event(self, event, *_):
@@ -234,15 +240,11 @@ class ProviderEventsMonitor:
                 f'{event.args}')
 
             did = id_to_did(event.args["_did"])
-            # agreement = AgreementStoreManager.get_instance().get_agreement(agreement_id)
-            if DIDResolver(self._keeper.did_registry).resolve(did).metadata['main'][
-                'type'] == 'access':
-                unfulfilled_conditions = ['lockReward', 'accessSecretStore', 'escrowReward']
-            else:
-                unfulfilled_conditions = ['lockReward', 'execCompute', 'escrowReward']
+            agreement = self._keeper.agreement_manager.get_agreement(agreement_id)
+            unfulfilled_conditions = self._get_unfulfill_conditions(agreement.template_id)
             self.process_condition_events(
                 agreement_id, unfulfilled_conditions, did, event.args['_accessConsumer'],
-                event.blockNumber, new_agreement=True
+                event.blockNumber, new_agreement=True, template_id=agreement.template_id
             )
 
             logger.debug(f'handle_agreement_created()  (agreementId {agreement_id}) -- '
@@ -262,15 +264,14 @@ class ProviderEventsMonitor:
         logger.info(f'Agreement {agreement_id} is completed, all conditions are fulfilled.')
 
     def process_condition_events(self, agreement_id, conditions, did,
-                                 consumer_address, block_number, new_agreement=True):
+                                 consumer_address, block_number, new_agreement=True,
+                                 template_id=None):
 
         ddo = DIDResolver(self._keeper.did_registry).resolve(did)
-        if ddo.metadata['main']['type'] == 'dataset':
-            service_agreement = ServiceAgreement.from_ddo(ServiceTypes.ASSET_ACCESS, ddo)
-            cond_order = ['accessSecretStore', 'lockReward', 'escrowReward']
-        else:
-            service_agreement = ServiceAgreement.from_ddo(ServiceTypes.CLOUD_COMPUTE, ddo)
-            cond_order = ['execCompute', 'lockReward', 'escrowReward']
+
+        cond_order = self._get_conditions_order(template_id)
+        agreement_type = self._get_agreement_type(template_id)
+        service_agreement = ddo.get_service(agreement_type)
         condition_def_dict = service_agreement.condition_by_name
         price = service_agreement.get_price()
         if new_agreement:
@@ -278,7 +279,7 @@ class ProviderEventsMonitor:
             self.db.record_service_agreement(
                 agreement_id, ddo.did, service_agreement.index, price,
                 ddo.metadata.get('encryptedFiles'), consumer_address, start_time,
-                block_number, ServiceTypes.ASSET_ACCESS,
+                block_number, agreement_type,
                 service_agreement.condition_by_name.keys()
             )
 
@@ -289,32 +290,27 @@ class ProviderEventsMonitor:
             publisher_address=ddo.publisher,
             keeper=self._keeper
         )
-        # cond_order = ['accessSecretStore', 'lockReward', 'escrowReward']
         cond_to_id = {cond_order[i]: _id for i, _id in enumerate(condition_ids)}
         for cond in conditions:
 
-            if cond == 'lockReward' and 'accessSecretStore' in cond_order:
+            if cond == 'lockReward':
+                if agreement_type == ServiceTypes.ASSET_ACCESS:
+                    condition = lockRewardCondition.fulfillAccessSecretStoreCondition
+                else:
+                    condition = lockRewardExecutionCondition.fulfillExecComputeCondition
                 self._keeper.lock_reward_condition.subscribe_condition_fulfilled(
                     agreement_id,
                     max(condition_def_dict['lockReward'].timeout, self.EVENT_WAIT_TIMEOUT),
-                    lockRewardCondition.fulfillAccessSecretStoreCondition,
+                    condition,
                     (agreement_id, ddo.did, service_agreement, consumer_address,
                      self._account, condition_ids[0]),
-                    from_block=block_number
-                )
-            elif cond == 'lockReward' and 'execCompute' in cond_order:
-                self._keeper.lock_reward_condition.subscribe_condition_fulfilled(
-                    agreement_id,
-                    max(condition_def_dict['lockReward'].timeout, self.EVENT_WAIT_TIMEOUT),
-                    lockRewardExecutionCondition.fulfillExecComputeCondition,
-                    (agreement_id, ddo.did, service_agreement, consumer_address,
-                     self._account, condition_ids[0]),
-                    from_block=block_number
-                )
+                    from_block=block_number)
+
             elif cond == 'accessSecretStore':
                 self._keeper.access_secret_store_condition.subscribe_condition_fulfilled(
                     agreement_id,
-                    max(condition_def_dict['accessSecretStore'].timeout, self.EVENT_WAIT_TIMEOUT),
+                    max(condition_def_dict['accessSecretStore'].timeout,
+                        self.EVENT_WAIT_TIMEOUT),
                     accessSecretStore.fulfillEscrowRewardCondition,
                     (agreement_id, service_agreement, price, consumer_address, self._account,
                      condition_ids, condition_ids[2]),
@@ -332,8 +328,33 @@ class ProviderEventsMonitor:
             elif cond == 'escrowReward':
                 self._keeper.escrow_reward_condition.subscribe_condition_fulfilled(
                     agreement_id,
-                    max(condition_def_dict['escrowReward'].timeout, self.EVENT_WAIT_TIMEOUT),
+                    max(condition_def_dict['escrowReward'].timeout,
+                        self.EVENT_WAIT_TIMEOUT),
                     self._last_condition_fulfilled,
                     (agreement_id, cond_to_id),
                     from_block=block_number
                 )
+
+    def _get_unfulfill_conditions(self, template_id):
+        if self._get_agreement_type(template_id) == ServiceTypes.ASSET_ACCESS:
+            return ['lockReward', 'accessSecretStore', 'escrowReward']
+        elif self._get_agreement_type(template_id) == ServiceTypes.CLOUD_COMPUTE:
+            return ['lockReward', 'execCompute', 'escrowReward']
+        else:
+            return None
+
+    def _get_conditions_order(self, template_id):
+        if self._get_agreement_type(template_id) == ServiceTypes.ASSET_ACCESS:
+            return ['accessSecretStore', 'lockReward', 'escrowReward']
+        elif self._get_agreement_type(template_id) == ServiceTypes.CLOUD_COMPUTE:
+            return ['execCompute', 'lockReward', 'escrowReward']
+        else:
+            return None
+
+    def _get_agreement_type(self, template_id):
+        if template_id == self._keeper.escrow_access_secretstore_template.address:
+            return ServiceTypes.ASSET_ACCESS
+        elif template_id == self._keeper.escrow_compute_execution_template.address:
+            return ServiceTypes.CLOUD_COMPUTE
+        else:
+            return None
