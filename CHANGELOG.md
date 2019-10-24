@@ -1,6 +1,11 @@
 History
 =======
 
+0.3.0 (October 23rd, 2019)
+-------------------------
+* Add listeners to compute case
+* Recovery mechanism for compute case in the same way that the access case.
+
 0.2.0 (September 6th, 2019)
 ---------------------------
 * Update to work with the new ddos.

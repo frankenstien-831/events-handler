@@ -31,15 +31,15 @@ def test_process_pending_agreements(keeper, web3, storage_path, provider_account
     agr_3 = place_order(provider_account, ddo, consumer)
     pending_agreements = {
         agr_1: [
-            did, 1, sa.get_price(), encrypted_files, start_time,
+            did, 3, sa.get_price(), encrypted_files, start_time,
             consumer.address, block_number, 'access'
         ],
         agr_2: [
-            did, 1, sa.get_price(), encrypted_files, start_time + 3000,
+            did, 3, sa.get_price(), encrypted_files, start_time + 3000,
             consumer.address, block_number, 'access'
         ],
         agr_3: [
-            did, 1, sa.get_price(), encrypted_files, start_time + 10000,
+            did, 3, sa.get_price(), encrypted_files, start_time + 10000,
             consumer.address, block_number, 'access'
         ]
 
