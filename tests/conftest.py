@@ -27,8 +27,8 @@ def get_resource_path(dir_name, file_name):
 def setup_all():
     config = get_config()
     keeper_url = config.keeper_url
-    Web3Provider.get_web3(keeper_url)
-    ContractHandler.artifacts_path = get_keeper_path(config)
+    Web3Provider.init_web3(keeper_url)
+    ContractHandler.set_artifacts_path(get_keeper_path(config))
     init_account_envvars()
 
 
@@ -44,7 +44,7 @@ def web3():
 
 @pytest.fixture
 def keeper():
-    return Keeper.get_instance(get_keeper_path(get_config()))
+    return Keeper.get_instance()
 
 
 @pytest.fixture
