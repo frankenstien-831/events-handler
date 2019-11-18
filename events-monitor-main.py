@@ -30,7 +30,7 @@ def run_events_monitor():
                              f'variable `PROVIDER_ADDRESS`. Please set the following environment '
                              f'variables and try again: `PROVIDER_ADDRESS`, `PROVIDER_PASSWORD`, '
                              f'and `PROVIDER_KEYFILE`.')
-    if not account._private_key or not (account.password and account._encrypted_key):
+    if not account._private_key and not (account.password and account._encrypted_key):
         raise AssertionError(f'Provider events monitor cannot run without a valid '
                              f'ethereum account with either a password and keyfile/encrypted-key-string '
                              f'or private key. Current account has password {account.password}, '
