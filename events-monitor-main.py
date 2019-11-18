@@ -18,9 +18,9 @@ def run_events_monitor():
     artifacts_path = get_keeper_path(config)
     storage_path = config.get('resources', 'storage.path', fallback='./provider-events-monitor.db')
 
-    ContractHandler.artifacts_path = artifacts_path
+    ContractHandler.set_artifacts_path(artifacts_path)
     web3 = Web3Provider.get_web3(keeper_url)
-    keeper = Keeper.get_instance(artifacts_path)
+    keeper = Keeper.get_instance()
     init_account_envvars()
 
     account = get_account(0)
@@ -30,10 +30,12 @@ def run_events_monitor():
                              f'variable `PROVIDER_ADDRESS`. Please set the following environment '
                              f'variables and try again: `PROVIDER_ADDRESS`, `PROVIDER_PASSWORD`, '
                              f'and `PROVIDER_KEYFILE`.')
-    if not account.password or not account.key_file:
+    if not account._private_key and not (account.password and account._encrypted_key):
         raise AssertionError(f'Provider events monitor cannot run without a valid '
-                             f'ethereum account with a password and keyfile. Current account '
-                             f'has password {account.password} and keyfile {account.key_file}.')
+                             f'ethereum account with either a password and keyfile/encrypted-key-string '
+                             f'or private key. Current account has password {account.password}, '
+                             f'keyfile {account.key_file}, encrypted-key {account._encrypted_key} '
+                             f'and private-key {account._private_key}.')
 
     monitor = ProviderEventsMonitor(keeper, web3, storage_path, account)
     monitor.start_agreement_events_monitor()

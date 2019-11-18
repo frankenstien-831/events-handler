@@ -33,7 +33,7 @@ def init_account_envvars():
 
 
 def keeper_instance():
-    return Keeper.get_instance(get_keeper_path(get_config()))
+    return Keeper.get_instance()
 
 
 def web3():
