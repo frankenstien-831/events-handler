@@ -7,6 +7,7 @@ import time
 from datetime import datetime
 from threading import Thread
 
+from ocean_keeper.web3_provider import Web3Provider
 from ocean_utils.agreements.service_agreement import ServiceTypesIndices
 from ocean_utils.agreements.service_agreement_template import ServiceAgreementTemplate
 from ocean_utils.agreements.service_types import ServiceTypes
@@ -19,6 +20,9 @@ from ocean_events_handler.event_handlers import (accessSecretStore, lockRewardCo
                                                  lockRewardExecutionCondition)
 
 logger = logging.getLogger(__name__)
+
+
+debug_log = logger.debug
 
 
 class ProviderEventsMonitor:
@@ -98,7 +102,12 @@ class ProviderEventsMonitor:
     def get_instance(keeper, storage_path, account):
         if not ProviderEventsMonitor._instance or \
                 ProviderEventsMonitor._instance.provider_account != account:
-            ProviderEventsMonitor._instance = ProviderEventsMonitor(keeper, storage_path, account)
+            ProviderEventsMonitor._instance = ProviderEventsMonitor(
+                keeper,
+                Web3Provider.get_web3(),
+                storage_path,
+                account
+            )
 
         return ProviderEventsMonitor._instance
 
@@ -167,7 +176,7 @@ class ProviderEventsMonitor:
             from_block = max(to_block - self.last_n_blocks, block_num)
             block_range = from_block, to_block
 
-        logger.debug(f'next block range = {block_range}, latest block number: {to_block}')
+        debug_log(f'next block range = {block_range}, latest block number: {to_block}')
         return block_range
 
     def do_first_check(self):
@@ -193,21 +202,22 @@ class ProviderEventsMonitor:
 
                 self.last_processed_block = _to
 
-            except Exception as e:
-                logger.debug(f'Error processing event: {str(e)}')
+            except (KeyError, Exception) as e:
+                debug_log(f'Error processing event: {str(e)}')
 
             time.sleep(self._monitor_sleep_time)
 
     def get_agreement_events(self, from_block, to_block):
         event_filter = self._keeper.escrow_access_secretstore_template \
             .get_event_filter_for_agreement_created(
-            self._account.address, from_block, to_block)
+                self._account.address, from_block, to_block)
         event_filter2 = self._keeper.escrow_compute_execution_template \
             .get_event_filter_for_agreement_created(
-            self._account.address, from_block, to_block)
-        logger.debug(
+                self._account.address, from_block, to_block)
+        debug_log(
             f'getting event logs in range {from_block} to {to_block} for provider address '
-            f'{self._account.address}')
+            f'{self._account.address}'
+        )
         logs = event_filter.get_all_entries(max_tries=5)
         logs2 = event_filter2.get_all_entries(max_tries=5)
         logs3 = logs + logs2
@@ -218,9 +228,9 @@ class ProviderEventsMonitor:
             return
 
         if self._account.address != event.args["_accessProvider"]:
-            logger.debug(f'skip agreement event because it does not match my provider '
-                         f'address {self._account.address}, event provider '
-                         f'address is {event.args["_accessProvider"]}')
+            debug_log(f'skip agreement event because it does not match my provider '
+                      f'address {self._account.address}, event provider '
+                      f'address is {event.args["_accessProvider"]}')
             return
         agreement_id = None
         try:
@@ -230,12 +240,12 @@ class ProviderEventsMonitor:
                 # logger.info(f'got agreement ids: #{agreement_id}#, ##{ids}##, \nid in ids: {
                 # agreement_id in ids}')
                 if agreement_id in ids:
-                    logger.debug(
+                    debug_log(
                         f'handle_agreement_created: skipping service agreement {agreement_id} '
                         f'because it already been processed before.')
                     return
 
-            logger.debug(
+            debug_log(
                 f'Start handle_agreement_created (agreementId {agreement_id}): event_args='
                 f'{event.args}')
 
@@ -247,9 +257,9 @@ class ProviderEventsMonitor:
                 event.blockNumber, new_agreement=True, template_id=agreement.template_id
             )
 
-            logger.debug(f'handle_agreement_created()  (agreementId {agreement_id}) -- '
-                         f'done registering event listeners.')
-        except Exception as e:
+            debug_log(f'handle_agreement_created()  (agreementId {agreement_id}) -- '
+                      f'done registering event listeners.')
+        except (KeyError, Exception) as e:
             logger.error(f'Error in handle_agreement_created (agreementId {agreement_id}): {e}',
                          exc_info=1)
 
@@ -272,6 +282,15 @@ class ProviderEventsMonitor:
         cond_order = self._get_conditions_order(template_id)
         agreement_type = self._get_agreement_type(template_id)
         service_agreement = ddo.get_service(agreement_type)
+        if not service_agreement:
+            logger.warning(
+                f'Failed to find service agreement of type {agreement_type} and '
+                f'templateId {template_id}. \nKnown template ids are:'
+                f'{self._keeper.escrow_access_secretstore_template.address} and '
+                f'{self._keeper.escrow_compute_execution_template.address}.'
+                f'Processing service agreement {agreement_id} failed.'
+            )
+
         condition_def_dict = service_agreement.condition_by_name
         price = service_agreement.get_price()
         if new_agreement:

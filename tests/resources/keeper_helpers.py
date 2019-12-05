@@ -21,6 +21,10 @@ from tests.conftest import get_sample_ddo
 def get_registered_ddo(account, providers=None):
     keeper = keeper_instance()
     aqua = Aquarius('http://localhost:5000')
+
+    for did in aqua.list_assets():
+        aqua.retire_asset_ddo(did)
+
     metadata = get_sample_ddo()['service'][0]['attributes']
     metadata['main']['files'][0]['checksum'] = str(uuid.uuid4())
     ddo = DDO()
@@ -29,19 +33,22 @@ def get_registered_ddo(account, providers=None):
     metadata_service_desc = ServiceDescriptor.metadata_service_descriptor(metadata,
                                                                           ddo_service_endpoint)
 
-    access_service_attributes = {"main": {
-        "name": "dataAssetAccessServiceAgreement",
-        "creator": account.address,
-        "price": metadata[MetadataMain.KEY]['price'],
-        "timeout": 3600,
-        "datePublished": metadata[MetadataMain.KEY]['dateCreated']
-    }}
+    access_service_attributes = {
+        "main": {
+            "name": "dataAssetAccessServiceAgreement",
+            "creator": account.address,
+            "price": metadata[MetadataMain.KEY]['price'],
+            "timeout": 3600,
+            "datePublished": metadata[MetadataMain.KEY]['dateCreated']
+        }
+    }
 
     service_descriptors = [ServiceDescriptor.authorization_service_descriptor(
         'http://localhost:12001')]
     service_descriptors += [ServiceDescriptor.access_service_descriptor(
         access_service_attributes,
-        'http://localhost:8030'
+        'http://localhost:8030',
+        keeper.escrow_access_secretstore_template.address
     )]
 
     service_descriptors = [metadata_service_desc] + service_descriptors
@@ -56,16 +63,14 @@ def get_registered_ddo(account, providers=None):
 
     did = ddo.assign_did(DID.did(ddo.proof['checksum']))
 
-    access_service = ServiceFactory.complete_access_service(did,
-                                                            'http://localhost:8030',
-                                                            access_service_attributes,
-                                                            keeper.escrow_access_secretstore_template.address,
-                                                            keeper.escrow_reward_condition.address)
+    stype_to_service = {s.type: s for s in services}
+    access_service = stype_to_service[ServiceTypes.ASSET_ACCESS]
+
+    name_to_address = {cname: cinst.address for cname, cinst in keeper.contract_name_to_instance.items()}
+    access_service.init_conditions_values(did, contract_name_to_address=name_to_address)
+    ddo.add_service(access_service)
     for service in services:
-        if service.type == 'access':
-            ddo.add_service(access_service)
-        else:
-            ddo.add_service(service)
+        ddo.add_service(service)
 
     ddo.proof['signatureValue'] = keeper.sign_hash(did_to_id_bytes(did), account)
 
