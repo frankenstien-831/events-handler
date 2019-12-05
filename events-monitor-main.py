@@ -28,12 +28,14 @@ def run_events_monitor():
         raise AssertionError(f'Provider events monitor cannot run without a valid '
                              f'ethereum account. Account address was not found in the environment'
                              f'variable `PROVIDER_ADDRESS`. Please set the following environment '
-                             f'variables and try again: `PROVIDER_ADDRESS`, `PROVIDER_PASSWORD`, '
-                             f'and `PROVIDER_KEYFILE`.')
+                             f'variables and try again: `PROVIDER_ADDRESS`, [`PROVIDER_PASSWORD`, '
+                             f'and `PROVIDER_KEYFILE` or `PROVIDER_ENCRYPTED_KEY`] or `PROVIDER_KEY`.')
+
     if not account._private_key and not (account.password and account._encrypted_key):
         raise AssertionError(f'Provider events monitor cannot run without a valid '
-                             f'ethereum account with either a password and keyfile/encrypted-key-string '
-                             f'or private key. Current account has password {account.password}, '
+                             f'ethereum account with either a `PROVIDER_PASSWORD` '
+                             f'and `PROVIDER_KEYFILE`/`PROVIDER_ENCRYPTED_KEY` '
+                             f'or private key `PROVIDER_KEY`. Current account has password {account.password}, '
                              f'keyfile {account.key_file}, encrypted-key {account._encrypted_key} '
                              f'and private-key {account._private_key}.')
 

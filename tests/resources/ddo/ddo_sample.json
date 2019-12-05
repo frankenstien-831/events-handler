@@ -99,7 +99,7 @@
           ],
           "inLanguage": "en",
 
-          "updateFrecuency": "yearly",
+          "updateFrequency": "yearly",
           "structuredMarkup": [
             {
               "uri": "http://skos.um.es/unescothes/C01194/jsonld",
@@ -129,6 +129,7 @@
         "main": {
           "name": "dataAssetAccessServiceAgreement",
           "creator": "",
+          "dateCreated": "2019-02-08T08:13:49Z",
           "datePublished": "2019-02-08T08:13:49Z",
           "price": "10",
           "timeout": 36000
