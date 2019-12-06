@@ -21,7 +21,7 @@ with open('CHANGELOG.md') as history_file:
 # or pip install -e .
 install_requirements = [
     'ocean-utils==0.3.2',
-    'ocean-keeper==0.3.1',
+    'ocean-keeper==0.3.0',
     'ocean-secret-store-client==0.0.2',
     'PyYAML==4.2b4',
 ]
