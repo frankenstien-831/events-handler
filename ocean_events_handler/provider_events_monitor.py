@@ -7,6 +7,7 @@ import time
 from datetime import datetime
 from threading import Thread
 
+from ocean_keeper.utils import generate_multi_value_hash
 from ocean_keeper.web3_provider import Web3Provider
 from ocean_utils.agreements.service_agreement import ServiceTypesIndices
 from ocean_utils.agreements.service_agreement_template import ServiceAgreementTemplate
@@ -371,9 +372,15 @@ class ProviderEventsMonitor:
             return None
 
     def _get_agreement_type(self, template_id):
-        if template_id == self._keeper.escrow_access_secretstore_template.address:
+        access_template_id = generate_multi_value_hash(
+            ['string'], [self._keeper.escrow_access_secretstore_template.CONTRACT_NAME])
+        compute_template_id = generate_multi_value_hash(
+            ['string'], [self._keeper.escrow_compute_execution_template.CONTRACT_NAME])
+        if template_id == self._keeper.escrow_access_secretstore_template.address or \
+                template_id == access_template_id:
             return ServiceTypes.ASSET_ACCESS
-        elif template_id == self._keeper.escrow_compute_execution_template.address:
+        elif template_id == self._keeper.escrow_compute_execution_template.address or \
+                template_id == compute_template_id:
             return ServiceTypes.CLOUD_COMPUTE
-        else:
-            return None
+
+        return ServiceTypes.ASSET_ACCESS
