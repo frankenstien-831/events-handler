@@ -1,14 +1,12 @@
 import time
 
+from ocean_keeper.web3_provider import Web3Provider
 from ocean_utils.agreements.service_agreement import ServiceAgreement
-from ocean_utils.aquarius import AquariusProvider
 
 from ocean_events_handler.provider_events_monitor import ProviderEventsMonitor
-from ocean_keeper.web3_provider import Web3Provider
-
 from tests.conftest import get_consumer_account
-from tests.resources.keeper_helpers import get_registered_ddo, place_order, lock_reward, grant_access, get_conditions_status
-from tests.resources.mocks.aquarius import AquariusMock
+from tests.resources.keeper_helpers import (get_conditions_status, get_registered_ddo, grant_access,
+                                            lock_reward, place_order)
 
 
 def test_init_events_monitor(keeper, web3, storage_path, provider_account):
@@ -26,24 +24,23 @@ def test_process_pending_agreements(keeper, web3, storage_path, provider_account
     block_number = web3.eth.blockNumber
     block_number = block_number - 10 if block_number > 10 else block_number
     metadata = ddo.metadata
-    encrypted_files = metadata['base']['encryptedFiles']
-    sa = ServiceAgreement.from_ddo('Access', ddo)
-    index = sa.service_definition_id
-    agr_1 = place_order(provider_account, index, ddo, consumer)
-    agr_2 = place_order(provider_account, index, ddo, consumer)
-    agr_3 = place_order(provider_account, index, ddo, consumer)
+    encrypted_files = metadata['encryptedFiles']
+    sa = ServiceAgreement.from_ddo('access', ddo)
+    agr_1 = place_order(provider_account, ddo, consumer)
+    agr_2 = place_order(provider_account, ddo, consumer)
+    agr_3 = place_order(provider_account, ddo, consumer)
     pending_agreements = {
         agr_1: [
-            did, 1, sa.get_price(), encrypted_files, start_time,
-            consumer.address, block_number, 'Access'
+            did, 3, sa.get_price(), encrypted_files, start_time,
+            consumer.address, block_number, 'access'
         ],
         agr_2: [
-            did, 1, sa.get_price(), encrypted_files, start_time+3000,
-            consumer.address, block_number, 'Access'
+            did, 3, sa.get_price(), encrypted_files, start_time + 3000,
+            consumer.address, block_number, 'access'
         ],
         agr_3: [
-            did, 1, sa.get_price(), encrypted_files, start_time+10000,
-            consumer.address, block_number, 'Access'
+            did, 3, sa.get_price(), encrypted_files, start_time + 10000,
+            consumer.address, block_number, 'access'
         ]
 
     }
@@ -52,7 +49,7 @@ def test_process_pending_agreements(keeper, web3, storage_path, provider_account
         agr_2: {'accessSecretStore': 1, 'lockReward': 1, 'escrowReward': 1},
         agr_3: {'accessSecretStore': 2, 'lockReward': 2, 'escrowReward': 1}
     }
-    balance = keeper.token.get_token_balance(consumer.address)/(2**18)
+    balance = keeper.token.get_token_balance(consumer.address) / (2 ** 18)
     if balance < 20:
         keeper.dispenser.request_tokens(100, consumer)
 
@@ -69,7 +66,6 @@ def test_process_pending_agreements(keeper, web3, storage_path, provider_account
         if cond_to_status['accessSecretStore'] != 2:
             raise AssertionError(f'grant access failed for agreement {agr_3}')
 
-    AquariusProvider.set_aquarius_class(AquariusMock)
     events_monitor = ProviderEventsMonitor(keeper, web3, storage_path, provider_account)
     events_monitor.process_pending_agreements(pending_agreements, conditions)
 
