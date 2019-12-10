@@ -1,6 +1,6 @@
 [![banner](https://raw.githubusercontent.com/oceanprotocol/art/master/github/repo-banner%402x.png)](https://oceanprotocol.com)
 
-# events-handler-py
+# events-handler
 Publisher events handler agent dealing with Keeper Contract events
 
 
@@ -24,8 +24,8 @@ Python 3.6
 First, clone this repository:
 
 ```bash
-git clone git@github.com:oceanprotocol/events-handler-py.git
-cd events-handler-py/
+git clone git@github.com:oceanprotocol/events-handler.git
+cd events-handler/
 ```
 
 Start a keeper node and other services of the ocean network:
@@ -33,7 +33,7 @@ Start a keeper node and other services of the ocean network:
 ```bash
 git clone git@github.com:oceanprotocol/barge.git
 cd barge
-bash start_ocean.sh --no-events-handler --no-pleuston --local-spree-node
+bash start_ocean.sh --no-events-handler --no-commons --local-spree-node
 ```
 
 Barge is the repository where all the Ocean Docker Compose files are located. 
@@ -63,7 +63,7 @@ and java implementation) to publish an asset and start a consume request. For mo
 Ocean ecosystem please refer to [Ocean API](https://github.com/oceanprotocol/squid-py/#usage) 
 
 To run the events-handler as a provider, you can either run it from source as described above or 
-use a docker image `docker pull oceanprotocol/events-handler-py:latest`. To run the docker image 
+use a docker image `docker pull oceanprotocol/events-handler:latest`. To run the docker image 
 please refer to the docker-compose file in barge [events_handler.yml](https://github.com/oceanprotocol/barge/tree/master/compose-files/events_handler.yml)
 
 #### Code style
