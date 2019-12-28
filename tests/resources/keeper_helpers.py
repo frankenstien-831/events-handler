@@ -45,10 +45,11 @@ def get_registered_ddo(account, providers=None):
 
     service_descriptors = [ServiceDescriptor.authorization_service_descriptor(
         'http://localhost:12001')]
+    template_name = keeper.template_manager.SERVICE_TO_TEMPLATE_NAME[ServiceTypes.ASSET_ACCESS]
     service_descriptors += [ServiceDescriptor.access_service_descriptor(
         access_service_attributes,
         'http://localhost:8030',
-        keeper.escrow_access_secretstore_template.address
+        keeper.template_manager.create_template_id(template_name)
     )]
 
     service_descriptors = [metadata_service_desc] + service_descriptors
@@ -143,14 +144,13 @@ def secret_store_decrypt(did, encrypted_document, account):
 def place_order(publisher_account, ddo, consumer_account):
     keeper = keeper_instance()
     agreement_id = ServiceAgreement.create_new_agreement_id()
-    agreement_template = keeper.escrow_access_secretstore_template
     publisher_address = publisher_account.address
     service_agreement = ServiceAgreement.from_ddo(ServiceTypes.ASSET_ACCESS, ddo)
     condition_ids = service_agreement.generate_agreement_condition_ids(
         agreement_id, ddo.asset_id, consumer_account.address, publisher_address, keeper)
     time_locks = service_agreement.conditions_timelocks
     time_outs = service_agreement.conditions_timeouts
-    agreement_template.create_agreement(
+    keeper.agreement_manager.create_agreement(
         agreement_id,
         ddo.asset_id,
         condition_ids,
