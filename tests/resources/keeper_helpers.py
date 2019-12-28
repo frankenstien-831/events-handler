@@ -141,6 +141,11 @@ def secret_store_decrypt(did, encrypted_document, account):
     )
 
 
+def get_template_actor_types(keeper, template_id):
+    actor_type_ids = keeper.template_manager.get_template(template_id).actor_type_ids
+    return [keeper.template_manager.get_template_actor_type_value(_id) for _id in actor_type_ids]
+
+
 def place_order(publisher_account, ddo, consumer_account):
     keeper = keeper_instance()
     agreement_id = ServiceAgreement.create_new_agreement_id()
@@ -150,13 +155,18 @@ def place_order(publisher_account, ddo, consumer_account):
         agreement_id, ddo.asset_id, consumer_account.address, publisher_address, keeper)
     time_locks = service_agreement.conditions_timelocks
     time_outs = service_agreement.conditions_timeouts
+    template_name = keeper.template_manager.SERVICE_TO_TEMPLATE_NAME[ServiceTypes.ASSET_ACCESS]
+    template_id = keeper.template_manager.create_template_id(template_name)
+    actor_map = {'consumer': consumer_account.address, 'provider': publisher_address}
+    actors = [actor_map[_type] for _type in get_template_actor_types(keeper, template_id)]
     keeper.agreement_manager.create_agreement(
         agreement_id,
         ddo.asset_id,
+        template_id,
         condition_ids,
         time_locks,
         time_outs,
-        consumer_account.address,
+        actors,
         consumer_account
     )
 
