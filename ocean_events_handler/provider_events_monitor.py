@@ -152,10 +152,14 @@ class ProviderEventsMonitor:
             unfulfilled_conditions = conditions[agreement_id].keys()
             logger.info(f'process pending agreement conditions: agreementId={agreement_id}, '
                         f'unfulfilled conditions={unfulfilled_conditions}')
+
             if data[1] == ServiceTypesIndices.DEFAULT_ACCESS_INDEX:
-                template_id = self._keeper.escrow_access_secretstore_template.address
+                _type = ServiceTypes.ASSET_ACCESS
             else:
-                template_id = self._keeper.escrow_compute_execution_template.address
+                _type = ServiceTypes.CLOUD_COMPUTE
+
+            template_name = self._keeper.template_manager.SERVICE_TO_TEMPLATE_NAME[_type]
+            template_id = self._keeper.template_manager.create_template_id(template_name)
             self.process_condition_events(
                 agreement_id,
                 unfulfilled_conditions,
@@ -209,20 +213,15 @@ class ProviderEventsMonitor:
             time.sleep(self._monitor_sleep_time)
 
     def get_agreement_events(self, from_block, to_block):
-        event_filter = self._keeper.escrow_access_secretstore_template \
-            .get_event_filter_for_agreement_created(
-                self._account.address, from_block, to_block)
-        event_filter2 = self._keeper.escrow_compute_execution_template \
-            .get_event_filter_for_agreement_created(
-                self._account.address, from_block, to_block)
+        event_filter = self._keeper.agreement_manager.get_event_filter_for_agreement_created(
+            self._account.address, from_block, to_block
+        )
         debug_log(
             f'getting event logs in range {from_block} to {to_block} for provider address '
             f'{self._account.address}'
         )
-        logs = event_filter.get_all_entries(max_tries=5)
-        logs2 = event_filter2.get_all_entries(max_tries=5)
-        logs3 = logs + logs2
-        return logs3
+
+        return event_filter.get_all_entries(max_tries=5)
 
     def _handle_agreement_created_event(self, event, *_):
         if not event or not event.args:
@@ -286,9 +285,7 @@ class ProviderEventsMonitor:
         if not service_agreement:
             logger.warning(
                 f'Failed to find service agreement of type {agreement_type} and '
-                f'templateId {template_id}. \nKnown template ids are:'
-                f'{self._keeper.escrow_access_secretstore_template.address} and '
-                f'{self._keeper.escrow_compute_execution_template.address}.'
+                f'templateId {template_id}. \n'
                 f'Processing service agreement {agreement_id} failed.'
             )
 
@@ -323,7 +320,7 @@ class ProviderEventsMonitor:
                     max(condition_def_dict['lockReward'].timeout, self.EVENT_WAIT_TIMEOUT),
                     condition,
                     (agreement_id, ddo.did, service_agreement, consumer_address,
-                     self._account, condition_ids[0]),
+                     self._account, condition_ids[1]),
                     from_block=block_number)
 
             elif cond == 'accessSecretStore':
@@ -365,21 +362,23 @@ class ProviderEventsMonitor:
 
     def _get_conditions_order(self, template_id):
         if self._get_agreement_type(template_id) == ServiceTypes.ASSET_ACCESS:
-            return ['accessSecretStore', 'lockReward', 'escrowReward']
+            return ['lockReward', 'accessSecretStore', 'escrowReward']
         elif self._get_agreement_type(template_id) == ServiceTypes.CLOUD_COMPUTE:
-            return ['execCompute', 'lockReward', 'escrowReward']
+            return ['lockReward', 'execCompute', 'escrowReward']
         else:
             return None
 
     def _get_agreement_type(self, template_id):
-        access_template_id = generate_multi_value_hash(
-            ['string'], [self._keeper.escrow_access_secretstore_template.CONTRACT_NAME])
-        compute_template_id = generate_multi_value_hash(
-            ['string'], [self._keeper.escrow_compute_execution_template.CONTRACT_NAME])
-        if template_id == self._keeper.escrow_access_secretstore_template.address or \
+        service_to_name = self._keeper.template_manager.SERVICE_TO_TEMPLATE_NAME
+        access_template_id = self._keeper.template_manager.create_template_id(service_to_name[ServiceTypes.ASSET_ACCESS])
+        compute_template_id = self._keeper.template_manager.create_template_id(service_to_name[ServiceTypes.CLOUD_COMPUTE])
+        if (self._keeper.escrow_access_secretstore_template and
+            template_id == self._keeper.escrow_access_secretstore_template.address) or \
                 template_id == access_template_id:
             return ServiceTypes.ASSET_ACCESS
-        elif template_id == self._keeper.escrow_compute_execution_template.address or \
+
+        elif (self._keeper.escrow_compute_execution_template and
+              template_id == self._keeper.escrow_compute_execution_template.address) or \
                 template_id == compute_template_id:
             return ServiceTypes.CLOUD_COMPUTE
 

@@ -40,7 +40,7 @@ def fulfill_escrow_reward_condition(event, agreement_id, service_agreement, pric
         return
 
     logger.debug(f"release reward (agreement {agreement_id}) after event {event}.")
-    access_id, lock_id = condition_ids[:2]
+    lock_id, access_id = condition_ids[:2]
     logger.debug(f'fulfill_escrow_reward_condition: '
                  f'agreementId={agreement_id}'
                  f'price={price}, {type(price)}'

@@ -1,7 +1,7 @@
 [![banner](https://raw.githubusercontent.com/oceanprotocol/art/master/github/repo-banner%402x.png)](https://oceanprotocol.com)
 
 # events-handler
-Publisher events handler agent dealing with Keeper Contract events
+Provider's events handler agent dealing with Keeper Contract events
 
 
 ## Features
@@ -46,8 +46,10 @@ Note that it runs an Aquarius instance and an Elasticsearch instance but Aquariu
 also work with BigchainDB or MongoDB.
 
 Export environment variables `PROVIDER_ADDRESS`, `PROVIDER_PASSWORD`
-and `PROVIDER_KEYFILE`. Use the values from the `tox.ini` file, or use 
+and `PROVIDER_KEYFILE` (or `PROVIDER_ENCRYPTED_KEY`). Use the values from the `tox.ini` file, or use 
 your own.
+Instead of using keyfile and password, you can use the private key directly 
+by setting the env var `PROVIDER_KEY`.
 
 The most simple way to start is:
 
