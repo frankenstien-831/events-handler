@@ -320,7 +320,7 @@ class ProviderEventsMonitor:
                     max(condition_def_dict['lockReward'].timeout, self.EVENT_WAIT_TIMEOUT),
                     condition,
                     (agreement_id, ddo.did, service_agreement, consumer_address,
-                     self._account, condition_ids[0]),
+                     self._account, condition_ids[1]),
                     from_block=block_number)
 
             elif cond == 'accessSecretStore':
@@ -362,9 +362,9 @@ class ProviderEventsMonitor:
 
     def _get_conditions_order(self, template_id):
         if self._get_agreement_type(template_id) == ServiceTypes.ASSET_ACCESS:
-            return ['accessSecretStore', 'lockReward', 'escrowReward']
+            return ['lockReward', 'accessSecretStore', 'escrowReward']
         elif self._get_agreement_type(template_id) == ServiceTypes.CLOUD_COMPUTE:
-            return ['execCompute', 'lockReward', 'escrowReward']
+            return ['lockReward', 'execCompute', 'escrowReward']
         else:
             return None
 
